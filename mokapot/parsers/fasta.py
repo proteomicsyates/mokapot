@@ -13,14 +13,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 def read_fasta(
-    fasta_files,
-    enzyme="[KR]",
-    missed_cleavages=2,
-    clip_nterm_methionine=False,
-    min_length=6,
-    max_length=50,
-    semi=False,
-    decoy_prefix="decoy_",
+        fasta,
+        enzyme="[KR]",
+        missed_cleavages=2,
+        clip_nterm_methionine=False,
+        min_length=6,
+        max_length=50,
+        semi=False,
+        decoy_prefix="decoy_",
+        enzyme_term=True
 ):
     """Parse a FASTA file, storing a mapping of peptides and proteins.
 
@@ -41,7 +42,7 @@ def read_fasta(
 
     Parameters
     ----------
-    fasta_files : str or tuple of str
+    fasta : list of TextIOWrapper's and StringIO's
         The FASTA file(s) used for assigning the PSMs
     decoy_prefix : str, optional
         The prefix used to indicate a decoy protein in the description
@@ -77,13 +78,10 @@ def read_fasta(
 
     # Read in the fasta files
     LOGGER.info("Parsing FASTA files and digesting proteins...")
-    fasta = _parse_fasta_files(fasta_files)
     # Build the initial mapping
     proteins = {}
     peptides = defaultdict(set)
-    for entry in fasta:
-        prot, seq = _parse_protein(entry)
-
+    for i, (prot, seq, desc) in enumerate(fasta):
         peps = digest(
             seq,
             enzyme_regex=enzyme_regex,
@@ -92,12 +90,15 @@ def read_fasta(
             max_length=max_length,
             semi=semi,
             clip_nterm_methionine=clip_nterm_methionine,
+            enzyme_term=enzyme_term
         )
 
         if peps:
             proteins[prot] = peps
             for pep in peps:
                 peptides[pep].add(prot)
+
+            # print(f'{i} {len(peps)}')
 
     total_prots = len(fasta)
     LOGGER.info("  - Parsed and digested %i proteins.", total_prots)
@@ -267,6 +268,7 @@ def digest(
     min_length=6,
     max_length=50,
     semi=False,
+    enzyme_term=True
 ):
     """
     Digest a protein sequence into its constituent peptides.
@@ -294,7 +296,7 @@ def digest(
     peptides : set of str
         The peptides resulting from the digested sequence.
     """
-    sites = _cleavage_sites(sequence, enzyme_regex)
+    sites = _cleavage_sites(sequence, enzyme_regex, enzyme_term)
     peptides = _cleave(
         sequence=sequence,
         sites=sites,
@@ -322,11 +324,10 @@ def _parse_fasta_files(fasta_files):
     proteins : list of str
         The raw protein headers and sequences.
     """
-    fasta_files = tuplize(fasta_files)
+    fasta_files = fasta_files
     fasta = []
-    for fasta_file in fasta_files:
-        with open(fasta_file) as fa:
-            fasta.append(fa.read())
+    for fa in fasta_files:
+        fasta.append(fa.read())
 
     return "\n".join(fasta)[1:].split("\n>")
 
@@ -348,12 +349,13 @@ def _parse_protein(raw_protein):
     """
     entry = raw_protein.splitlines()
     prot = entry[0].split(" ")[0]
+    desc = "".join(entry[0].split(" ")[1:])
     if len(entry) == 1:
-        logging.warning("No sequence was detected for %s.", prot)
-        return prot, ""
+        return prot, "", desc
 
     seq = "".join(entry[1:])
-    return prot, seq
+    return prot, seq, desc
+
 
 
 def _shuffle_proteins(proteins, decoy_prefix, enzyme, reverse):
@@ -415,7 +417,7 @@ def _shuffle_proteins(proteins, decoy_prefix, enzyme, reverse):
     return decoys
 
 
-def _cleavage_sites(sequence, enzyme_regex):
+def _cleavage_sites(sequence, enzyme_regex, enzyme_term):
     """Find the cleavage sites in a sequence.
 
     Parameters
@@ -436,7 +438,7 @@ def _cleavage_sites(sequence, enzyme_regex):
     # Find the cleavage sites
     sites = (
         [0]
-        + [m.end() for m in enzyme_regex.finditer(sequence)]
+        + [m.end() if enzyme_term else m.start() for m in enzyme_regex.finditer(sequence)]
         + [len(sequence)]
     )
     return sites
