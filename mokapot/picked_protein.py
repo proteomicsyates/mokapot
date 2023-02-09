@@ -94,21 +94,22 @@ def picked_protein(
             shared_unmatched,
             len(prots),
         )
-
+        LOGGER.info(f'Matched {(1 - shared_unmatched / len(prots))*100}% of peptides')
         if shared_unmatched / len(prots) > 0.10:
             LOGGER.warning(
-                f"Fewer than 90% of all peptides could be matched to proteins. "
-                f"Please verify that your digest settings are correct. matched: {(1 - shared_unmatched / len(prots))*100}%"
+                "Fewer than 90% of all peptides could be matched to proteins. "
+                "Please verify that your digest settings are correct. matched: "
             )
 
     # Verify that reasonable number of decoys were matched.
     if proteins.has_decoys:
         num_unmatched_decoys = unmatched_prots[target_column][~shared].sum()
         total_decoys = (~prots[target_column]).sum()
+        LOGGER.info(f'Matched {(1 - num_unmatched_decoys / total_decoys)*100}% of decoy peptides')
         if num_unmatched_decoys / total_decoys > 0.05:
             LOGGER.warning(
-                f"Fewer than 5% of decoy peptides could be mapped to proteins."
-                f" Was the correct FASTA file and digest settings used? matched: {(1 - num_unmatched_decoys / total_decoys)*100}%"
+                "Fewer than 5% of decoy peptides could be mapped to proteins."
+                " Was the correct FASTA file and digest settings used?"
             )
 
     prots = prots.loc[~unmatched, :]
