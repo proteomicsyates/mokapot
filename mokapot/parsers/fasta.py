@@ -481,12 +481,12 @@ def _cleave(
     peptides : set of str
         The peptides resulting from the digested sequence.
     """
-    peptides = set()
+
     if len(sites) >= len(sequence):
         return get_non_enzymatic_sequences(sequence, min_len=min_length, max_len=max_length)
 
-
     # Do the digest
+    peptides = set()
     for start_idx, start_site in enumerate(sites):
         for diff_idx in range(1, missed_cleavages + 2):
             end_idx = start_idx + diff_idx

@@ -14,7 +14,7 @@ from . import __version__
 from .brew import brew
 from .config import Config
 from .model import PercolatorModel, load_model
-from .parsers.fasta import read_fasta
+from .parsers.fasta import read_fasta, _parse_protein, _parse_fasta_files
 from .parsers.pepxml import read_pepxml
 from .parsers.pin import read_pin
 from .plugins import get_plugins
@@ -77,9 +77,11 @@ def main():
 
     # Parse FASTA, if required:
     if config.proteins is not None:
+        with open(config.proteins) as f:
+            fasta_elems = [_parse_protein(entry) for entry in _parse_fasta_files(f)]
         logging.info("Protein-level confidence estimates enabled.")
         proteins = read_fasta(
-            config.proteins,
+            fasta_elems,
             enzyme=config.enzyme,
             missed_cleavages=config.missed_cleavages,
             clip_nterm_methionine=config.clip_nterm_methionine,
