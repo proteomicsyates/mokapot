@@ -5,6 +5,7 @@ from textwrap import wrap
 from collections import defaultdict
 
 import numpy as np
+from peptacular.peptide import get_non_enzymatic_sequences, get_semi_sequences
 
 from ..utils import tuplize
 from ..proteins import Proteins
@@ -481,13 +482,16 @@ def _cleave(
         The peptides resulting from the digested sequence.
     """
     peptides = set()
+    if len(sites) >= len(sequence):
+        return get_non_enzymatic_sequences(sequence, min_len=min_length, max_len=max_length)
+
 
     # Do the digest
     for start_idx, start_site in enumerate(sites):
         for diff_idx in range(1, missed_cleavages + 2):
             end_idx = start_idx + diff_idx
             if end_idx >= len(sites):
-                continue
+                break
 
             end_site = sites[end_idx]
             peptide = sequence[start_site:end_site]
@@ -500,18 +504,8 @@ def _cleave(
                 if len(peptide[1:]) >= min_length:
                     peptides.add(peptide[1:])
 
-            # Handle semi:
-            if semi:
-                for idx in range(1, len(peptide)):
-                    sub_pep_len = len(peptide) - idx
-                    if sub_pep_len < min_length:
-                        break
-
-                    if sub_pep_len > max_length:
-                        continue
-
-                    semi_pep = {peptide[idx:], peptide[:-idx]}
-                    peptides = peptides.union(semi_pep)
+            if semi is True:
+                peptides.update(get_semi_sequences(peptide, min_len=min_length, max_len=max_length))
 
     return peptides
 
