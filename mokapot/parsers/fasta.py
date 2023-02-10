@@ -188,12 +188,12 @@ def read_fasta(
 
 
 def make_decoys(
-    fasta,
-    out_file,
-    decoy_prefix="decoy_",
-    enzyme="[KR]",
-    reverse=False,
-    concatenate=True,
+        fasta,
+        out_file,
+        decoy_prefix="decoy_",
+        enzyme="[KR]",
+        reverse=False,
+        concatenate=True,
 ):
     """
     Create a FASTA file with decoy sequences.
@@ -261,14 +261,14 @@ def make_decoys(
 
 
 def digest(
-    sequence,
-    enzyme_regex="[KR]",
-    missed_cleavages=0,
-    clip_nterm_methionine=False,
-    min_length=6,
-    max_length=50,
-    semi=False,
-    enzyme_term=True
+        sequence,
+        enzyme_regex="[KR]",
+        missed_cleavages=0,
+        clip_nterm_methionine=False,
+        min_length=6,
+        max_length=50,
+        semi=False,
+        enzyme_term=True
 ):
     """
     Digest a protein sequence into its constituent peptides.
@@ -361,7 +361,6 @@ def _parse_protein(raw_protein):
     return prot, seq, desc
 
 
-
 def _shuffle_proteins(proteins, decoy_prefix, enzyme, reverse):
     """Shuffle protein sequences
 
@@ -441,21 +440,21 @@ def _cleavage_sites(sequence, enzyme_regex, enzyme_term):
 
     # Find the cleavage sites
     sites = (
-        [0]
-        + [m.end() if enzyme_term else m.start() for m in enzyme_regex.finditer(sequence)]
-        + [len(sequence)]
+            [0]
+            + [m.end() if enzyme_term else m.start() for m in enzyme_regex.finditer(sequence)]
+            + [len(sequence)]
     )
     return sites
 
 
 def _cleave(
-    sequence,
-    sites,
-    missed_cleavages,
-    min_length,
-    max_length,
-    semi,
-    clip_nterm_met,
+        sequence,
+        sites,
+        missed_cleavages,
+        min_length,
+        max_length,
+        semi,
+        clip_nterm_met,
 ):
     """Digest a protein sequence into its constituent peptides.
 
