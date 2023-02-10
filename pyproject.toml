@@ -24,7 +24,7 @@ dependencies = [
     "triqler>=0.6.2",
     "joblib>=1.1.0",
     "importlib-metadata>=5.1.0",
-    "spectacular==0.0.3"
+    "peptacular==0.0.3"
 ]
 dynamic = ["version"]
 
