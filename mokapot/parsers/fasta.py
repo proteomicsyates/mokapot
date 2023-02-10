@@ -349,7 +349,11 @@ def _parse_protein(raw_protein):
     """
     entry = raw_protein.splitlines()
     prot = entry[0].split(" ")[0]
-    desc = "".join(entry[0].split(" ")[1:])
+    try:
+        desc = "".join(entry[0].split(" ")[1:])
+    except IndexError:
+        desc = ""
+
     if len(entry) == 1:
         return prot, "", desc
 
